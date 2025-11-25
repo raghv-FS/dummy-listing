@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organization Navigator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .header {
+            padding: 28px 40px;
+            border-bottom: 2px solid #e5e5e5;
+            background: white;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 500;
+            color: #1a1a1a;
+            letter-spacing: -0.02em;
+        }
+
+        .company-selector {
+            padding: 24px 40px;
+            background: #fafafa;
+            border-bottom: 2px solid #e5e5e5;
+        }
+
+        .company-selector select {
+            width: 100%;
+            max-width: 500px;
+            padding: 14px 18px;
+            font-size: 15px;
+            border: 2px solid #d4d4d4;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #1a1a1a;
+        }
+
+
+
+        .company-selector select:focus {
+            outline: none;
+            border-color: #737373;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .departments-panel {
+            border-right: 2px solid #e5e5e5;
+            background: #fafafa;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 32px 32px 20px;
+            background: #fafafa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #e5e5e5;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .panel-header h2 {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #737373;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+
+        .sort-selector {
+            font-size: 12px;
+            border: 2px solid #d4d4d4;
+            border-radius: 4px;
+            padding: 6px 10px;
+            background: white;
+            color: #1a1a1a;
+            cursor: pointer;
+        }
+
+        .sort-selector:focus {
+            outline: none;
+            border-color: #737373;
+        }
+
+        .current-dept-display {
+            font-size: 18px;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-top: 8px;
+            letter-spacing: -0.01em;
+        }
+
+        .back-button {
+            width: 100%;
+            padding: 16px 32px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #e5e5e5;
+            text-align: left;
+            cursor: pointer;
+            font-size: 15px;
+            color: #525252;
+            font-weight: 400;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-button:hover {
+            background: #f5f5f5;
+            color: #1a1a1a;
+        }
+
+        .back-button i {
+            font-size: 14px;
+        }
+
+        .department-list {
+            padding: 12px 24px 32px;
+            flex: 1;
+        }
+
+        .department-item {
+            padding: 18px 20px;
+            margin-bottom: 8px;
+            background: white;
+            border: 2px solid #e5e5e5;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .department-item {
+            cursor: pointer;
+        }
+
+        .department-item.expandable:hover {
+            border-color: #525252;
+            background: #ffffff;
+            transform: translateX(4px);
+        }
+
+
+
+        .department-name {
+            font-weight: 400;
+            color: #1a1a1a;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .department-icon {
+            width: 36px;
+            height: 36px;
+            background: #f5f5f5;
+            border: 2px solid #e5e5e5;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            color: #525252;
+        }
+
+        .department-item.expandable .department-icon {
+            background: #f5f5f5;
+            border-color: #e5e5e5;
+        }
+
+
+
+        .department-item.non-expandable .department-icon {
+            background: #fafafa;
+            border-color: #e5e5e5;
+        }
+
+        .expand-indicator {
+            width: 32px;
+            height: 32px;
+            background: #f5f5f5;
+            border: 2px solid #e5e5e5;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #525252;
+            transition: all 0.2s ease;
+        }
+
+
+
+        .employee-count {
+            background: #f5f5f5;
+            color: #525252;
+            padding: 6px 14px;
+            border-radius: 4px;
+            border: 2px solid #e5e5e5;
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .employees-panel {
+            overflow-y: auto;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .employees-header {
+            padding: 32px 40px 20px;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #e5e5e5;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .employees-header h2 {
+            font-size: 24px;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+
+        .employees-count {
+            color: #737373;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .search-box {
+            padding: 20px 40px 24px;
+            background: white;
+            position: sticky;
+            z-index: 9;
+        }
+
+        .search-box input {
+            width: 100%;
+            max-width: 600px;
+            padding: 12px 18px 12px 42px;
+            border: 2px solid #d4d4d4;
+            border-radius: 4px;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            background: #fafafa;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 54px;
+            top: 35px;
+            color: #a3a3a3;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #737373;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-box input::placeholder {
+            color: #a3a3a3;
+        }
+
+        .employee-list {
+            padding: 0 40px 40px;
+            flex: 1;
+        }
+
+        .location-group {
+            margin-bottom: 40px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .location-header {
+            font-size: 11px;
+            font-weight: 600;
+            color: #525252;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: #f5f5f5;
+            border: 2px solid #e5e5e5;
+            border-radius: 4px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .location-header i {
+            font-size: 12px;
+            color: #737373;
+        }
+
+        .employee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .employee-card {
+            padding: 20px;
+            background: #fafafa;
+            border: 2px solid #e5e5e5;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+            animation: slideIn 0.2s ease;
+        }
+
+
+
+        .employee-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .employee-name i {
+            font-size: 14px;
+            color: #737373;
+        }
+
+        .employee-role {
+            color: #737373;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .employee-role i {
+            font-size: 12px;
+            color: #a3a3a3;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 32px;
+            color: #a3a3a3;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            margin-top: 12px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 32px;
+            color: #a3a3a3;
+            font-size: 14px;
+        }
+
+        .loading i {
+            font-size: 32px;
+            margin-bottom: 12px;
+            display: block;
+            animation: spin 1s linear infinite;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            color: #991b1b;
+            padding: 12px 20px;
+            margin: 20px 40px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #fafafa;
+            border-left: 2px solid #e5e5e5;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d4d4d4;
+            border-radius: 2px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a3a3a3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Organization Navigator</h1>
+        </div>
+
+        <div class="company-selector">
+            <select id="companySelect">
+                <option value="">Select a company...</option>
+            </select>
+        </div>
+
+        <div class="main-content">
+            <div class="departments-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Departments</h2>
+                        <div id="currentDeptDisplay" class="current-dept-display" style="display: none;"></div>
+                    </div>
+                    <select id="departmentSort" class="sort-selector">
+                        <option value="display_order">Display Order</option>
+                        <option value="reverse_display_order">Reverse Display Order</option>
+                        <option value="alpha_asc">A-Z</option>
+                        <option value="alpha_desc">Z-A</option>
+                    </select>
+                </div>
+                <button id="backButton" class="back-button" style="display: none;">
+                    <i class="fas fa-arrow-left"></i>
+                    Back
+                </button>
+                <div id="departmentList" class="department-list"></div>
+            </div>
+
+            <div class="employees-panel">
+                <div class="employees-header">
+                    <div>
+                        <h2 id="employeesTitle">Employees</h2>
+                        <div class="employees-count" id="employeesCount">Select a company to view employees</div>
+                    </div>
+                    <select id="locationSort" class="sort-selector">
+                        <option value="asc">A-Z</option>
+                        <option value="desc">Z-A</option>
+                    </select>
+                </div>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search employees...">
+                </div>
+                <div id="employeeList" class="employee-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:8000/organization';
+
+        // State
+        let state = {
+            selectedCompany: null,
+            currentParentDept: null,
+            currentDeptName: null,
+            departments: [],
+            employees: [],
+            allEmployees: [],
+            breadcrumb: [],
+            departmentSort: 'display_order',
+            locationSort: 'asc'
+        };
+
+        // DOM Elements
+        const companySelect = document.getElementById('companySelect');
+        const backButton = document.getElementById('backButton');
+        const currentDeptDisplay = document.getElementById('currentDeptDisplay');
+        const departmentList = document.getElementById('departmentList');
+        const employeeList = document.getElementById('employeeList');
+        const employeesTitle = document.getElementById('employeesTitle');
+        const employeesCount = document.getElementById('employeesCount');
+        const searchInput = document.getElementById('searchInput');
+        const departmentSort = document.getElementById('departmentSort');
+        const locationSort = document.getElementById('locationSort');
+
+        // Initialize
+        async function init() {
+            await loadCompanies();
+            setupEventListeners();
+        }
+
+        // Load companies
+        async function loadCompanies() {
+            try {
+                const response = await fetch(`${API_BASE}/companies/`);
+                const data = await response.json();
+
+                if (data.success) {
+                    renderCompanyDropdown(data.companies);
+                }
+            } catch (error) {
+                console.error('Error loading companies:', error);
+                showError('Failed to load companies');
+            }
+        }
+
+        // Render company dropdown
+        function renderCompanyDropdown(companies) {
+            companySelect.innerHTML = '<option value="">Select a company...</option>';
+            companies.forEach(company => {
+                const option = document.createElement('option');
+                option.value = company.id;
+                option.textContent = company.name;
+                companySelect.appendChild(option);
+            });
+        }
+
+        // Handle company selection
+        async function handleCompanySelect(companyId) {
+            if (!companyId) return;
+
+            state.selectedCompany = companyId;
+            state.currentParentDept = null;
+            state.currentDeptName = null;
+            state.breadcrumb = [];
+
+            showLoading(departmentList);
+            showLoading(employeeList);
+
+            try {
+                // Load root departments
+                const deptResponse = await fetch(`${API_BASE}/companies/${companyId}/departments/navigation/`);
+                const deptData = await deptResponse.json();
+
+                if (deptData.success) {
+                    state.departments = deptData.departments;
+                    state.breadcrumb = deptData.breadcrumb;
+                    renderDepartments();
+                }
+
+                // Load all company employees
+                const empResponse = await fetch(`${API_BASE}/companies/${companyId}/employees/`);
+                const empData = await empResponse.json();
+
+                if (empData.success) {
+                    state.employees = empData.employees;
+                    state.allEmployees = empData.employees;
+                    renderEmployees();
+                    updateEmployeesHeader('All Employees', empData.total_count);
+                }
+            } catch (error) {
+                console.error('Error loading company data:', error);
+                showError('Failed to load company data');
+            }
+        }
+
+        // Handle department click
+        async function handleDepartmentClick(deptId) {
+            const dept = state.departments.find(d => d.company_dept_id === deptId);
+
+            showLoading(employeeList);
+
+            try {
+                // Load employees for this department
+                const empResponse = await fetch(
+                    `${API_BASE}/companies/${state.selectedCompany}/departments/${deptId}/employees/?include_children=true`
+                );
+                const empData = await empResponse.json();
+
+                if (empData.success) {
+                    state.employees = empData.employees;
+                    state.allEmployees = empData.employees;
+                    renderEmployees();
+
+                    const deptName = dept.name;
+                    state.currentDeptName = deptName;
+                    updateEmployeesHeader(`Employees in ${deptName}`, empData.total_count);
+                }
+
+                // If department has children, navigate into it
+                if (dept.has_children) {
+                    showLoading(departmentList);
+
+                    const deptResponse = await fetch(
+                        `${API_BASE}/companies/${state.selectedCompany}/departments/navigation/?parent_id=${deptId}`
+                    );
+                    const deptData = await deptResponse.json();
+
+                    if (deptData.success) {
+                        state.departments = deptData.departments;
+                        state.breadcrumb = deptData.breadcrumb;
+                        state.currentParentDept = deptId;
+                        renderDepartments();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading department data:', error);
+                showError('Failed to load department data');
+            }
+        }
+
+        // Handle back button
+        async function handleBackClick() {
+            if (state.breadcrumb.length === 0) {
+                return;
+            }
+
+            if (state.breadcrumb.length === 1) {
+                // Go back to company root
+                await handleCompanySelect(state.selectedCompany);
+            } else {
+                // Go back to parent department
+                const parentDept = state.breadcrumb[state.breadcrumb.length - 2];
+
+                showLoading(departmentList);
+                showLoading(employeeList);
+
+                try {
+                    // Load sub-departments for the parent
+                    const deptResponse = await fetch(
+                        `${API_BASE}/companies/${state.selectedCompany}/departments/navigation/?parent_id=${parentDept.id}`
+                    );
+                    const deptData = await deptResponse.json();
+
+                    if (deptData.success) {
+                        state.departments = deptData.departments;
+                        state.breadcrumb = deptData.breadcrumb;
+                        state.currentParentDept = parentDept.id;
+                        renderDepartments();
+                    }
+
+                    // Load employees for the parent department
+                    const empResponse = await fetch(
+                        `${API_BASE}/companies/${state.selectedCompany}/departments/${parentDept.id}/employees/?include_children=true`
+                    );
+                    const empData = await empResponse.json();
+
+                    if (empData.success) {
+                        state.employees = empData.employees;
+                        state.allEmployees = empData.employees;
+                        renderEmployees();
+                        state.currentDeptName = parentDept.name;
+                        updateEmployeesHeader(`Employees in ${parentDept.name}`, empData.total_count);
+                    }
+                } catch (error) {
+                    console.error('Error going back:', error);
+                    showError('Failed to go back');
+                }
+            }
+        }
+
+        // Render departments
+        function renderDepartments() {
+            if (state.departments.length === 0) {
+                departmentList.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><div class="empty-state-text">No departments found</div></div>';
+                backButton.style.display = 'none';
+                currentDeptDisplay.style.display = 'none';
+                return;
+            }
+
+            // Sort departments based on selected sort
+            let sortedDepartments = [...state.departments];
+            switch (state.departmentSort) {
+                case 'display_order':
+                    sortedDepartments.sort((a, b) => a.display_order - b.display_order);
+                    break;
+                case 'reverse_display_order':
+                    sortedDepartments.sort((a, b) => b.display_order - a.display_order);
+                    break;
+                case 'alpha_asc':
+                    sortedDepartments.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'alpha_desc':
+                    sortedDepartments.sort((a, b) => b.name.localeCompare(a.name));
+                    break;
+            }
+
+            departmentList.innerHTML = '';
+
+            sortedDepartments.forEach(dept => {
+                const item = document.createElement('div');
+                item.className = 'department-item';
+
+                item.onclick = () => handleDepartmentClick(dept.company_dept_id);
+
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'department-icon';
+                const icon = document.createElement('i');
+                icon.className = dept.has_children ? 'fas fa-folder-open' : 'fas fa-folder';
+                iconDiv.appendChild(icon);
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'department-name';
+                nameDiv.appendChild(iconDiv);
+
+                const textSpan = document.createElement('span');
+                textSpan.textContent = dept.name;
+                nameDiv.appendChild(textSpan);
+
+                const rightSection = document.createElement('div');
+                rightSection.style.display = 'flex';
+                rightSection.style.alignItems = 'center';
+                rightSection.style.gap = '12px';
+
+                const countDiv = document.createElement('div');
+                countDiv.className = 'employee-count';
+                countDiv.textContent = dept.employee_count_total;
+                rightSection.appendChild(countDiv);
+
+                item.appendChild(nameDiv);
+                item.appendChild(rightSection);
+                departmentList.appendChild(item);
+            });
+
+            const isNavigated = state.breadcrumb.length > 0;
+            backButton.style.display = isNavigated ? 'block' : 'none';
+
+            if (isNavigated && state.breadcrumb.length > 0) {
+                const currentDept = state.breadcrumb[state.breadcrumb.length - 1];
+                currentDeptDisplay.textContent = currentDept.name;
+                currentDeptDisplay.style.display = 'block';
+            } else {
+                currentDeptDisplay.style.display = 'none';
+            }
+        }
+        // Render employees grouped by location
+        function renderEmployees() {
+            if (state.employees.length === 0) {
+                employeeList.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><div class="empty-state-text">No employees found</div></div>';
+                return;
+            }
+
+            // Group employees by location
+            const grouped = {};
+            const noLocation = [];
+
+            state.employees.forEach(emp => {
+                const location = emp.location_name;
+                if (!location || location === 'No Location') {
+                    noLocation.push(emp);
+                } else {
+                    if (!grouped[location]) {
+                        grouped[location] = [];
+                    }
+                    grouped[location].push(emp);
+                }
+            });
+
+            employeeList.innerHTML = '';
+
+            // Render employees without location first
+            if (noLocation.length > 0) {
+                const group = document.createElement('div');
+                group.className = 'location-group';
+                const grid = document.createElement('div');
+                grid.className = 'employee-grid';
+
+                noLocation.forEach(emp => {
+                    const card = document.createElement('div');
+                    card.className = 'employee-card';
+
+                    const employeeName = emp.person_details
+                        ? emp.person_details.full_name
+                        : emp.employee_name;
+
+                    const roleName = emp.role_names || 'No Role';
+
+                    card.innerHTML = `
+                        <div class="employee-name"><i class="fas fa-user"></i>${employeeName}</div>
+                        <div class="employee-role"><i class="fas fa-briefcase"></i>${roleName}</div>
+                    `;
+
+                    grid.appendChild(card);
+                });
+                group.appendChild(grid);
+
+                employeeList.appendChild(group);
+            }
+
+            // Sort location keys
+            let sortedLocations = Object.keys(grouped);
+            if (state.locationSort === 'desc') {
+                sortedLocations.sort((a, b) => b.localeCompare(a));
+            } else {
+                sortedLocations.sort((a, b) => a.localeCompare(b));
+            }
+
+            // Render employees by location
+            sortedLocations.forEach(location => {
+                renderLocationGroup(location, grouped[location]);
+            });
+        }
+        // Render a location group
+        function renderLocationGroup(locationName, employees) {
+            const group = document.createElement('div');
+            group.className = 'location-group';
+
+            const header = document.createElement('div');
+            header.className = 'location-header';
+            header.innerHTML = `<i class="fas fa-map-marker-alt"></i>${locationName} (${employees.length})`;
+            group.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = 'employee-grid';
+
+            employees.forEach(emp => {
+                const card = document.createElement('div');
+                card.className = 'employee-card';
+
+                const employeeName = emp.person_details
+                    ? emp.person_details.full_name
+                    : emp.employee_name;
+
+                const roleName = emp.role_name || 'No Role';
+
+                card.innerHTML = `
+                    <div class="employee-name"><i class="fas fa-user"></i>${employeeName}</div>
+                    <div class="employee-role"><i class="fas fa-briefcase"></i>${roleName}</div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            group.appendChild(grid);
+            employeeList.appendChild(group);
+        }
+
+        // Update employees header
+        function updateEmployeesHeader(title, count) {
+            employeesTitle.textContent = title;
+            employeesCount.textContent = `${count} employee${count !== 1 ? 's' : ''}`;
+        }
+
+        // Search employees
+        function searchEmployees(query) {
+            if (!query) {
+                state.employees = state.allEmployees;
+                renderEmployees();
+                return;
+            }
+
+            query = query.toLowerCase();
+            state.employees = state.allEmployees.filter(emp => {
+                const name = emp.person_details
+                    ? emp.person_details.full_name.toLowerCase()
+                    : emp.employee_name.toLowerCase();
+                const role = (emp.role_name || '').toLowerCase();
+
+                return name.includes(query) || role.includes(query);
+            });
+
+            renderEmployees();
+            const currentTitle = state.currentDeptName ? `Employees in ${state.currentDeptName}` : 'All Employees';
+            updateEmployeesHeader(currentTitle, state.employees.length);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            companySelect.addEventListener('change', (e) => {
+                handleCompanySelect(e.target.value);
+            });
+
+            backButton.addEventListener('click', handleBackClick);
+
+            departmentSort.addEventListener('change', (e) => {
+                state.departmentSort = e.target.value;
+                renderDepartments();
+            });
+
+            locationSort.addEventListener('change', (e) => {
+                state.locationSort = e.target.value;
+                renderEmployees();
+            });
+
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchEmployees(e.target.value);
+                }, 300);
+            });
+        }
+
+        // Utility functions
+        function showLoading(element) {
+            element.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i>Loading...</div>';
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.container').prepend(errorDiv);
+
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+
+</html>
